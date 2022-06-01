@@ -86,11 +86,15 @@ namespace GeneratorListyZakupow
 
             #region obliczenia
             ConcurrentDictionary<String, int> Wyjsciowe = new ConcurrentDictionary<String, int>();
-
+            Wyjsciowe.TryAdd("sosSojowy", 10);
             foreach (Przepis prz in Przepisy)
             {
                 //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
-                prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala!!!!!!!!!!!!
+                //prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala
+                foreach (KeyValuePair<String,int> kvp in prz.ListaSkladnikow)
+                {
+                    Wyjsciowe.AddOrUpdate(kvp.Key, kvp.Value, (k, v) => v + kvp.Value);
+                }
             }
             #endregion
 
@@ -101,7 +105,7 @@ namespace GeneratorListyZakupow
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "ListaZakupow.txt")))
             {
                 foreach (KeyValuePair<String, int> line in Wyjsciowe)
-                { outputFile.WriteLine($"{line.Key.ToString()}  test    {line.Value.ToString()}g"); }
+                { outputFile.WriteLine($"{line.Key.ToString()}       {line.Value.ToString()}g"); }
             }
             #endregion
 
