@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace GeneratorListyZakupow
             List<String> Skladniki = new List<String>();
             Console.WriteLine("Cześć, zaczynamy!");
             Console.WriteLine("Pamiętaj że muszisz mieć przygotowane pliki Config.cfg i skladniki.cfg w tej samej lokalizacji co .exe");
-            
+
             #region odczyt z pliku
             if (File.Exists("Config.cfg") && File.Exists("Skladniki.cfg"))
             {
@@ -84,18 +85,29 @@ namespace GeneratorListyZakupow
             #endregion
 
             #region obliczenia
-            Dictionary<String, int> Wyjsciowe = new Dictionary<String, int>();
+            ConcurrentDictionary<String, int> Wyjsciowe = new ConcurrentDictionary<String, int>();
+
             foreach (Przepis prz in Przepisy)
             {
-                prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe/*tu dopisac*/:Wyjsciowe.Add(m.Key,m.Value));
+                //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
+                prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));
             }
             #endregion
 
 
             #region zapis do pliku
-            if (!File.Exists("Config.cfg")) File.Create("ListaZakupow.txt");
+            //if (!File.Exists("ListaZakupow.txt")) File.Create("ListaZakupow.txt");
+            //File.Open("ListaZakupow.txt", FileMode.Open,FileAccess.Write);
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "ListaZakupow.txt")))
+            {
+                foreach (KeyValuePair<String, int> line in Wyjsciowe)
+                { outputFile.WriteLine($"{line.Key.ToString()}  test    {line.Value.ToString()}g"); }
+            }
             #endregion
 
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"KONIEC");
+            Console.ForegroundColor = ConsoleColor.White;
             Console.ReadKey();
         }
     }
