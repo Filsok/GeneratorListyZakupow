@@ -90,7 +90,7 @@ namespace GeneratorListyZakupow
             foreach (Przepis prz in Przepisy)
             {
                 //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
-                prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));
+                prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala!!!!!!!!!!!!
             }
             #endregion
 
