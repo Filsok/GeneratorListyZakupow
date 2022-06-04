@@ -17,13 +17,13 @@ namespace GeneratorListyZakupow
         {
             List<Przepis> Przepisy = new List<Przepis>();
             List<String> Skladniki = new List<String>();
-            Console.WriteLine("Cześć, zaczynamy!");
-            Console.WriteLine("Pamiętaj że muszisz mieć przygotowane pliki Config.cfg i skladniki.cfg w tej samej lokalizacji co .exe");
+            Log("Cześć, zaczynamy!");
+            Log("Pamiętaj że muszisz mieć przygotowane pliki Config.cfg i skladniki.cfg w tej samej lokalizacji co .exe");
 
             #region odczyt z pliku
             if (File.Exists("Config.cfg") && File.Exists("Skladniki.cfg"))
             {
-                Console.WriteLine("Super, ten pliki istnieją. Ciekawe czy mają poprawną zawartość...");
+                Log("Super, ten pliki istnieją. Ciekawe czy mają poprawną zawartość...");
                 String[] sa = File.ReadAllLines("Skladniki.cfg");
                 String[] tmp;
 
@@ -42,9 +42,7 @@ namespace GeneratorListyZakupow
                     {
                         Przepisy.Add(p);
                         p.ListaSkladnikow.Clear();
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.WriteLine("############################### NASTĘPNY SŁOWNIK ###############################");
-                        Console.ForegroundColor = ConsoleColor.White;
+                        Log("############################### NASTĘPNY SŁOWNIK ###############################", ConsoleColor.Blue);
                     }
                     else
                     {
@@ -60,33 +58,28 @@ namespace GeneratorListyZakupow
                                 {
                                     if (tmp[0].ToString().Equals("") || tmp[1].ToString().Equals(""))
                                     {
-                                        Console.ForegroundColor = ConsoleColor.Red;
-                                        Console.WriteLine($"ERROR Skladnik {tmp[0]} lub jego ilosc {tmp[1]} są puste!");
-                                        Console.ForegroundColor = ConsoleColor.White;
+                                        Log($"ERROR Skladnik {tmp[0]} lub jego ilosc {tmp[1]} są puste!",ConsoleColor.Red);
                                     }
                                     else if (Skladniki.Contains(tmp[0])) p.ListaSkladnikow.Add(tmp[0].ToString(), int.Parse(tmp[1]));
                                     else
                                     {
-                                        Console.ForegroundColor = ConsoleColor.Red;
-                                        Console.WriteLine($"ERROR Brak skladnika {tmp[0]} na liscie skladnikow!");
-                                        Console.ForegroundColor = ConsoleColor.White;
+                                        Log($"ERROR Brak skladnika {tmp[0]} na liscie skladnikow!", ConsoleColor.Red);
                                     }
                                     break;
                                 }
                         }
-                        Console.WriteLine($"Do slownika wchodzi linijka: {tmp[0]}  =  {tmp[1]}");
+                        Log($"Do slownika wchodzi linijka: {tmp[0]}  =  {tmp[1]}");
                     }
                 }
             }
             else
             {
-                Console.WriteLine("Brak pliku!!!");
+                Log("Brak pliku!!!");
             }
             #endregion
 
             #region obliczenia
             ConcurrentDictionary<String, int> Wyjsciowe = new ConcurrentDictionary<String, int>();
-            Wyjsciowe.TryAdd("sosSojowy", 10);
             foreach (Przepis prz in Przepisy)
             {
                 //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
@@ -109,11 +102,17 @@ namespace GeneratorListyZakupow
             }
             #endregion
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"KONIEC");
-            Console.ForegroundColor = ConsoleColor.White;
+            Log("KONIEC", ConsoleColor.Green);
             Console.ReadKey();
         }
+
+        private static void Log(string msg, ConsoleColor color=ConsoleColor.White)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(msg);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
     }
     class Przepis
     {
