@@ -11,7 +11,7 @@ namespace GeneratorListyZakupow
 {
     class Program
     {
-        int KcalTarget = 2200;
+        static double KcalTarget = 2200;
 
         static void Main(String[] args)
         {
@@ -37,11 +37,12 @@ namespace GeneratorListyZakupow
 
                 foreach (String ln in sa2)
                 {
-                    if (ln == "KONIEC") {; }
+                    if (ln == "KONIEC")
+                    { Przepisy.Add(p.DeepCopy()); p.Clear(); }
                     else if (ln == "")
                     {
-                        Przepisy.Add(p);
-                        p.ListaSkladnikow.Clear();
+                        Przepisy.Add(p.DeepCopy());
+                        p.Clear();
                         Log("############################### NASTĘPNY SŁOWNIK ###############################", ConsoleColor.Blue);
                     }
                     else
@@ -58,9 +59,9 @@ namespace GeneratorListyZakupow
                                 {
                                     if (tmp[0].ToString().Equals("") || tmp[1].ToString().Equals(""))
                                     {
-                                        Log($"ERROR Skladnik {tmp[0]} lub jego ilosc {tmp[1]} są puste!",ConsoleColor.Red);
+                                        Log($"ERROR Skladnik {tmp[0]} lub jego ilosc {tmp[1]} są puste!", ConsoleColor.Red);
                                     }
-                                    else if (Skladniki.Contains(tmp[0])) p.ListaSkladnikow.Add(tmp[0].ToString(), int.Parse(tmp[1]));
+                                    else if (Skladniki.Contains(tmp[0])) p.ListaSkladnikow.AddOrUpdate(tmp[0].ToString(), int.Parse(tmp[1]), (k, v) => v + int.Parse(tmp[1]));
                                     else
                                     {
                                         Log($"ERROR Brak skladnika {tmp[0]} na liscie skladnikow!", ConsoleColor.Red);
@@ -79,14 +80,15 @@ namespace GeneratorListyZakupow
             #endregion
 
             #region obliczenia
-            ConcurrentDictionary<String, int> Wyjsciowe = new ConcurrentDictionary<String, int>();
-            foreach (Przepis prz in Przepisy)
+            ConcurrentDictionary<String, double> Wyjsciowe = new ConcurrentDictionary<String, double>();
+                foreach (Przepis prz in Przepisy)
             {
+                double m = (KcalTarget/prz.Kcal)*prz.FilipDni+prz.IzabelaKcal/prz.Kcal;
                 //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
                 //prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala
-                foreach (KeyValuePair<String,int> kvp in prz.ListaSkladnikow)
+                foreach (KeyValuePair<String, double> kvp in prz.ListaSkladnikow)
                 {
-                    Wyjsciowe.AddOrUpdate(kvp.Key, kvp.Value, (k, v) => v + kvp.Value);
+                    Wyjsciowe.AddOrUpdate(kvp.Key, Math.Round(m*kvp.Value,1), (k,v) => v + kvp.Value);
                 }
             }
             #endregion
@@ -97,7 +99,7 @@ namespace GeneratorListyZakupow
             //File.Open("ListaZakupow.txt", FileMode.Open,FileAccess.Write);
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "ListaZakupow.txt")))
             {
-                foreach (KeyValuePair<String, int> line in Wyjsciowe)
+                foreach (KeyValuePair<String, double> line in Wyjsciowe)
                 { outputFile.WriteLine($"{line.Key.ToString()}       {line.Value.ToString()}g"); }
             }
             #endregion
@@ -106,7 +108,7 @@ namespace GeneratorListyZakupow
             Console.ReadKey();
         }
 
-        private static void Log(string msg, ConsoleColor color=ConsoleColor.White)
+        private static void Log(string msg, ConsoleColor color = ConsoleColor.White)
         {
             Console.ForegroundColor = color;
             Console.WriteLine(msg);
@@ -114,10 +116,10 @@ namespace GeneratorListyZakupow
         }
 
     }
-    class Przepis
+    class Przepis :ICloneable
     {
         public String Nazwa;
-        public Dictionary<String, int> ListaSkladnikow;
+        public ConcurrentDictionary<String, double> ListaSkladnikow;
         public String Opis;
         public int Kcal;
         public int FilipDni;
@@ -125,7 +127,40 @@ namespace GeneratorListyZakupow
 
         public Przepis()
         {
-            ListaSkladnikow = new Dictionary<String, int>();
+            ListaSkladnikow = new ConcurrentDictionary<String, double>();
+        }
+        public Przepis(Przepis przepis)
+        {
+            ListaSkladnikow = new ConcurrentDictionary<String, double>();
+            this.ListaSkladnikow = przepis.ListaSkladnikow;
+            this.Nazwa = przepis.Nazwa;
+            this.Opis = przepis.Opis;
+            this.Kcal = przepis.Kcal;
+            this.FilipDni = przepis.FilipDni;
+            this.IzabelaKcal = przepis.IzabelaKcal;
+        }
+        public void Clear()
+        {
+            this.ListaSkladnikow.Clear();
+            this.Nazwa = "";
+            this.Opis = "";
+            this.Kcal = 0;
+            this.FilipDni = 0;
+            this.IzabelaKcal = 0;
+        }
+        object ICloneable.Clone()
+        {
+            return new Przepis(this);
+        }
+        public Przepis ShallowCopy()
+        {
+            return (Przepis)this.MemberwiseClone();
+        }
+        public Przepis DeepCopy()
+        {
+            Przepis other = (Przepis)this.MemberwiseClone();
+            other.ListaSkladnikow = new ConcurrentDictionary<String,double>(this.ListaSkladnikow);
+            return other;
         }
     }
 }
