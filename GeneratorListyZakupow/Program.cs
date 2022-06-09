@@ -88,7 +88,7 @@ namespace GeneratorListyZakupow
                 //prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala
                 foreach (KeyValuePair<String, double> kvp in prz.ListaSkladnikow)
                 {
-                    Wyjsciowe.AddOrUpdate(kvp.Key, Math.Round(m*kvp.Value,1), (k,v) => v + kvp.Value);
+                    Wyjsciowe.AddOrUpdate(kvp.Key, Math.Round(m*kvp.Value,0), (k,v) => v + kvp.Value);
                 }
             }
             #endregion
@@ -100,7 +100,12 @@ namespace GeneratorListyZakupow
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "ListaZakupow.txt")))
             {
                 foreach (KeyValuePair<String, double> line in Wyjsciowe)
-                { outputFile.WriteLine($"{line.Key.ToString()}       {line.Value.ToString()}g"); }
+                //{ outputFile.WriteLine($"{line.Key.ToString()}       {line.Value.ToString()}g"); }
+                //{ outputFile.WriteLine(String.Format("{0,+40} {1,+50}g",line.Key.ToString(), line.Value.ToString())); }
+                {
+                    outputFile.WriteLine(String.Format("{0,-25} {1,10}g",line.Key.ToString(), line.Value.ToString()));
+                }
+
             }
             #endregion
 
@@ -121,9 +126,9 @@ namespace GeneratorListyZakupow
         public String Nazwa;
         public ConcurrentDictionary<String, double> ListaSkladnikow;
         public String Opis;
-        public int Kcal;
-        public int FilipDni;
-        public int IzabelaKcal;
+        public double Kcal;
+        public double FilipDni;
+        public double IzabelaKcal;
 
         public Przepis()
         {
