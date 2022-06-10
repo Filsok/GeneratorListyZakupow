@@ -81,14 +81,14 @@ namespace GeneratorListyZakupow
 
             #region obliczenia
             ConcurrentDictionary<String, double> Wyjsciowe = new ConcurrentDictionary<String, double>();
-                foreach (Przepis prz in Przepisy)
+            foreach (Przepis prz in Przepisy)
             {
-                double m = (KcalTarget/prz.Kcal)*prz.FilipDni+prz.IzabelaKcal/prz.Kcal;
+                double m = (KcalTarget / prz.Kcal) * prz.FilipDni + prz.IzabelaKcal / prz.Kcal;
                 //prz.ListaSkladnikow.Select(m=>Wyjsciowe.ContainsKey(m.Key)?Wyjsciowe[m.Key]=m.Value:Wyjsciowe.Add(m.Key,m.Value));
                 //prz.ListaSkladnikow.Select(m => Wyjsciowe.AddOrUpdate(m.Key, m.Value, (k, v) => v + m.Value));      //tu nie dziala
                 foreach (KeyValuePair<String, double> kvp in prz.ListaSkladnikow)
                 {
-                    Wyjsciowe.AddOrUpdate(kvp.Key, Math.Round(m*kvp.Value,0), (k,v) => v + kvp.Value);
+                    Wyjsciowe.AddOrUpdate(kvp.Key, Math.Round(m * kvp.Value, 0), (k, v) => v + kvp.Value);
                 }
             }
             #endregion
@@ -103,9 +103,19 @@ namespace GeneratorListyZakupow
                 //{ outputFile.WriteLine($"{line.Key.ToString()}       {line.Value.ToString()}g"); }
                 //{ outputFile.WriteLine(String.Format("{0,+40} {1,+50}g",line.Key.ToString(), line.Value.ToString())); }
                 {
-                    outputFile.WriteLine(String.Format("{0,-25} {1,10}g",line.Key.ToString(), line.Value.ToString()));
+                    outputFile.WriteLine(String.Format("{0,-25} {1,10}g", line.Key.ToString(), line.Value.ToString()));
                 }
-
+                for (int i = 0; i < 5; i++) outputFile.WriteLine("");
+                foreach (Przepis przepis in Przepisy)
+                {
+                    outputFile.WriteLine($"     {przepis.Nazwa}");
+                    outputFile.WriteLine($"Liczba porcji: Filip {(przepis.FilipDni * 4)} (łącznie {Math.Round(KcalTarget * przepis.FilipDni, 0)}" +
+                        $"kcal); Izabela: {Math.Round((przepis.IzabelaKcal / (KcalTarget / 4)), 0)} (łącznie {przepis.IzabelaKcal}kcal)");
+                    Write2FileWithWrapping(outputFile, przepis.Opis,80);
+                    foreach (KeyValuePair<String, double> skladnik in przepis.ListaSkladnikow)
+                        outputFile.WriteLine(String.Format("{0,-20} {1,10}g", skladnik.Key, skladnik.Value.ToString()));
+                    outputFile.WriteLine($"");
+                }
             }
             #endregion
 
@@ -119,9 +129,31 @@ namespace GeneratorListyZakupow
             Console.WriteLine(msg);
             Console.ForegroundColor = ConsoleColor.White;
         }
+        private static void Write2FileWithWrapping(StreamWriter file, String str, int len)
+        {
+            int i = 0;
+            string oneLine = "";
+            bool isFirst = true;
+            foreach (char ch in str)
+            {
+                if (i > len&& ch==' ')
+                {
+                    file.WriteLine(String.Format(isFirst?"{0,-150}":"     {0,-150}",oneLine));
+                    i = 0;
+                    oneLine = "";
+                    isFirst = false;
+                }
+                else
+                {
+                    i++;
+                    oneLine += ch;
+                }
+            }
+            file.WriteLine(String.Format("     {0,-150}",oneLine));
+        }
 
     }
-    class Przepis :ICloneable
+    class Przepis : ICloneable
     {
         public String Nazwa;
         public ConcurrentDictionary<String, double> ListaSkladnikow;
@@ -164,7 +196,7 @@ namespace GeneratorListyZakupow
         public Przepis DeepCopy()
         {
             Przepis other = (Przepis)this.MemberwiseClone();
-            other.ListaSkladnikow = new ConcurrentDictionary<String,double>(this.ListaSkladnikow);
+            other.ListaSkladnikow = new ConcurrentDictionary<String, double>(this.ListaSkladnikow);
             return other;
         }
     }
